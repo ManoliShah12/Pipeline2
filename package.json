@@ -23,7 +23,7 @@
   },
   "jest": {
     "moduleNameMapper": {
-      "axios": "<rootDir>/node_modules/axios/dist/axios.js"
+      "axios": "axios/dist/node/axios.cjs"
     }
   },
   "eslintConfig": {
