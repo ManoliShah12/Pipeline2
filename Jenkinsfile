@@ -1,24 +1,57 @@
 pipeline {
     agent any
- tools {
-        nodejs "NodeJs" // Use the name you configured in step 2
+    tools {
+        nodejs "NodeJs"
     }
     stages {
-        stage('Checkout') {
+        stage('Clean Workspace') {
             steps {
-                git 'https://github.com/ManoliShah12/Pipeline2.git'
+                script {
+                    // Remove the entire workspace
+                    deleteDir()
+                }
             }
         }
 
-        stage('Build and Test') {
+        stage('Environment') {
             steps {
-              script {
-            // Restore npm cache if available
-            dir('C:\Users\pmano\task-scheduler-website') {
-                def npmCache = tool name: 'NodeJs', type: 'npm'
-                sh "${npmCache}/bin/npm ci --cache .npm"
+                script {
+                    checkout([$class: 'GitSCM', branches: [[name: 'master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[url: 'https://github.com/ManoliShah12/Pipeline2.git']]])
+                }
             }
+        }
+
+        stage('Build') {
+            steps {
+                sh 'npm install'
+                sh 'npm -v' 
+                sh 'npm run build' 
             }
-  }
- }
+        }
+
+        stage('Test') {
+            steps {
+                sh 'npm test'
+            }
+        }
+
+        stage('Start Development Server') {
+            steps {
+                sh 'npm start &' 
+                sleep time: 30, unit: 'SECONDS' // Wait for the server to start (adjust the sleep time as needed)
+            }
+        }
+    }
+
+    post {
+        always {
+            sh 'pkill -f "npm start"'
+        }
+        success {
+            echo 'Pipeline succeeded!'
+        }
+        failure {
+            echo 'Pipeline failed!'
+        }
+    }
 }
